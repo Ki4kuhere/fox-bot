@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
+const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const { PermissionFlagsBits } = require('discord-api-types/v10');
 module.exports = {
     data: new SlashCommandBuilder()
@@ -9,7 +9,18 @@ module.exports = {
         .addStringOption(option => {return option.setName('description').setDescription('The description of the embed')})
         .addStringOption(option => {return option.setName('color').setDescription('The color of the embed')})
         .addStringOption(option => {return option.setName('footer').setDescription('The footer of the embed')})
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        // IF BUTTONS
+        .addBooleanOption(option => {return option.setName('buttons').setDescription('Whether or not to add buttons to the embed')})
+        .addStringOption(option => {return option.setName('buttonname').setDescription('The name of the button')})
+        .addStringOption(option => {return option.setName('buttonid').setDescription('The ID of the button')})
+        .addStringOption(option => {return option.setName('buttonstyle').setDescription('The Style of the button')
+        .addChoices(
+            { name: 'primary', value: 'PRIMARY' },
+            { name: 'secondary', value: 'SECONDARY' },
+            { name: 'success', value: 'SUCCESS' },
+            { name: 'danger', value: 'DANGER' },
+        )}),
     async execute(interaction) {
         const embed = new MessageEmbed();
         try {
@@ -17,6 +28,17 @@ module.exports = {
         if (interaction.options.getString('description')) embed.setDescription(interaction.options.getString('description'));
         if (interaction.options.getString('color')) embed.setColor(interaction.options.getString('color'));
         if (interaction.options.getString('footer')) embed.setFooter(interaction.options.getString('footer'));
+        
+        if(interaction.options.getBoolean('buttons')) {
+        const row = new MessageActionRow().addComponents(
+            new MessageButton()
+            .setCustomId(interaction.options.getString('buttonid'))
+            .setLabel(interaction.options.getString('buttonname'))
+            .setStyle(interaction.options.getString('buttonstyle'))
+        );
+        return interaction.channel.send({embeds: [embed], components: [row]});
+        }
+
         await interaction.channel.send({ embeds: [embed] });
         } catch (error) {
             const embed = new MessageEmbed();
